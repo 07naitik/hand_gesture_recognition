@@ -1,0 +1,107 @@
+Import numpy as np
+Import cv2
+Import math
+
+# video capture
+Capture = cv2.VideoCapture(0)
+
+While True:
+    Success,img = capture.read()
+   
+   
+    # Frame Cropping
+    Cv2.rectangle(img,(700,100),(1100,500),(0,255,0),0)
+    Crop_image= img[100:500,700:1100]
+   
+    # TODO: Grey Filter (pass crop_image)
+    # grey = your code
+    Grey = cv2.cvtColor(crop_image,cv2.COLOR_BGR2GRAY)
+   
+    # TODO: Gaussian Blur to smoothen the image (pass grey)
+    # blur = your code
+    Blur = cv2.GaussianBlur(grey,(35,35),0)
+
+    # TODO: thresholding the image using Binary inversion + OTSU
+    # ret,thresh= your code
+    Ret,thresh= cv2.threshold(blur,127,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
+
+    # show threshold
+    Cv2.imshow(“Threshold”,thresh)
+   
+    Contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    Try:
+        # TODO: contour with maximum area
+        # contour = your code
+        Contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        Contour = max(contours, key=lambda x: cv2.contourArea(x))
+        # bounding rectangle for the contour
+        X, y, w, h = cv2.boundingRect(contour)
+        Cv2.rectangle(crop_image, (x, y), (x + w, y + h), (0, 0, 255), 0)
+
+        # TODO: create hull
+        #hull = your code  (important: do not use returnPoints argument)
+        Hull = cv2.convexHull(contour, returnPoints=False)
+
+        Drawing = np.zeros(crop_image.shape, np.uint8)
+        Cv2.drawContours(drawing, [contour], -1, (0, 255, 0), 0)
+        Cv2.drawContours(drawing,[hull],-1,(0,0,255),0)
+
+        #TODO: finding convex hull
+        #hull = your code  (important: use returnPoints argument as False)
+        Hull = cv2.convexHull(contour, returnPoints=False)
+       
+        # TODO: finding convexity defects
+        # defects = your code
+        Defects = cv2.convexityDefects(contour, hull)
+       
+
+        Count_defects = 0
+        #TODO: refer to the math for calculating the angle part of README
+        For I in range(defects.shape[0]):
+            S, e, f, d = defects[I, 0]
+            Start = tuple(contour[s][0])
+            End = tuple(contour[e][0])
+            Far = tuple(contour[f][0])
+         
+        # calculating the angle using cosine formula
+       
+            A = math.sqrt((start[0] – end[0]) ** 2 + (start[1] – end[1]) ** 2)
+            B = math.sqrt((-start[0] + far[0]) ** 2 + (-start[1] + far[1]) ** 2)
+            C = math.sqrt((end[0] – far[0]) ** 2 + (end[1] – far[1]) ** 2)
+            Angle = (math.acos((b**2 + c**2 – a**2) / (2*b*c)))*57
+     
+            If angle <= 90:
+                Count_defects += 1
+                Cv2.circle(crop_image, far, 1, [0, 0, 255], -1)
+            Cv2.line(crop_image, start, end, [0, 255, 0], 2)
+           
+        # output
+        # TODO: Complete the logic
+        If count_defects == 0:
+            Cv2.putText(img, “ONE”,(50,50), cv2.FONT_HERSHEY_SIMPLEX, 2, 2)
+        Elif count_defects == 1:
+            Cv2.putText(img, “TWO”,(50,50), cv2.FONT_HERSHEY_SIMPLEX, 2, 2)
+        Elif count_defects== 2:
+            Cv2.putText(img, “THREE”,(50,50), cv2.FONT_HERSHEY_SIMPLEX, 2, 2)
+        Elif count_defects== 3:
+            Cv2.putText(img, “FOUR”,(50,50), cv2.FONT_HERSHEY_SIMPLEX, 2, 2)
+        Else:
+            Cv2.putText(img, “FIVE”,(50,50), cv2.FONT_HERSHEY_SIMPLEX, 2, 2)
+            Pass
+
+
+    Except:
+        Pass
+
+    Cv2.imshow(“Gesture”,img)
+    All_image = np.hstack((drawing,crop_image))
+
+    Cv2.imshow(‘contours’,all_image)
+
+    If cv2.waitKey(1)==ord(‘q’):
+        Break
+
+
+Capture.release()
+Cv2.destroyAllWindows()
+
